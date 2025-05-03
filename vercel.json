@@ -5,6 +5,8 @@
     { "src": "*.html", "use": "@vercel/static" }
   ],
   "routes": [
+    { "src": "/showcase", "dest": "/UIPageShowcase.html" },
     { "src": "/(.*)", "dest": "/UIprototype.html" }
   ]
 }
+
