@@ -1,12 +1,10 @@
 {
   "version": 2,
-  "name": "ripple-ui-prototype",
-  "cleanUrls": true,
-  "trailingSlash": false,
   "builds": [
     { "src": "*.html", "use": "@vercel/static" }
   ],
   "routes": [
+    { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/UIPageShowcase.html" }
   ]
 }
