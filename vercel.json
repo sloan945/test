@@ -1,13 +1,10 @@
 {
-  "name": "日潮有约-UI原型",
   "version": 2,
-  "public": true,
-  "cleanUrls": true,
+  "name": "ripple-ui-prototype",
   "builds": [
-    { "src": "**/*.html", "use": "@vercel/static" }
+    { "src": "*.html", "use": "@vercel/static" }
   ],
   "routes": [
-    { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/UIprototype.html" }
   ]
 }
