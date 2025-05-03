@@ -1,0 +1,2059 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>日潮有约 - UI原型</title>
+  <!-- TailwindCSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 配置TailwindCSS -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'brand-blue': '#3A7AFE',
+            'deep-blue': '#004C97',
+            'sky-blue': '#81C0FF',
+            'sunrise-orange': '#FF9D4D',
+            'calm-green': '#4ECDC4',
+            'error': '#F5222D',
+            'warning': '#FAAD14',
+            'success': '#52C41A',
+            'link': '#1890FF'
+          },
+          fontFamily: {
+            sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', 'sans-serif'],
+            numeric: ['DIN Alternate', '-apple-system-font', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <!-- FontAwesome图标库 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* 基础样式 */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: #f7f7f7;
+      color: #333;
+      padding: 0;
+      margin: 0;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* 自定义渐变 */
+    .bg-ocean-gradient {
+      background: linear-gradient(135deg, #3A7AFE 0%, #81C0FF 100%);
+    }
+    .bg-sunrise-gradient {
+      background: linear-gradient(135deg, #FF9D4D 0%, #FFD09F 100%);
+    }
+    .bg-sunset-gradient {
+      background: linear-gradient(135deg, #FF6E7F 0%, #FFCF96 100%);
+    }
+
+    /* 骨架屏动画 */
+    @keyframes shimmer {
+      0% { background-position: -468px 0 }
+      100% { background-position: 468px 0 }
+    }
+    .skeleton {
+      background: linear-gradient(to right, #f6f7f8 8%, #edeef1 18%, #f6f7f8 33%);
+      background-size: 800px 104px;
+      animation: shimmer 1.5s infinite linear;
+    }
+
+    /* 微信小程序特有样式 */
+    .wx-statusbar {
+      height: 25px;
+      width: 100%;
+      background-color: #ffffff;
+    }
+
+    /* 页面容器 */
+    .page-container {
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    /* 底部TabBar */
+    .tabbar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 56px;
+      display: flex;
+      background-color: #ffffff;
+      border-top: 1px solid #eaeaea;
+      z-index: 10;
+    }
+
+    .tabbar-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #999999;
+      font-size: 10px;
+    }
+
+    .tabbar-item.active {
+      color: #3A7AFE;
+    }
+
+    .tabbar-icon {
+      font-size: 22px;
+      margin-bottom: 3px;
+    }
+
+    /* 模拟手机屏幕 */
+    .device-wrapper {
+      width: 375px;
+      height: 812px;
+      margin: 20px auto;
+      border: 16px solid #111;
+      border-radius: 36px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+
+    /* 手势提示 */
+    .gesture-hint {
+      position: absolute;
+      background-color: rgba(0,0,0,0.7);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      z-index: 1000;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    /* 弹出层样式 */
+    .popup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0,0,0,0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .popup.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .popup-content {
+      width: 80%;
+      max-height: 70%;
+      background-color: #fff;
+      border-radius: 24px;
+      padding: 20px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="p-4 bg-blue-100 border-l-4 border-blue-500 mb-4">
+    <p class="font-bold">UI原型说明</p>
+    <p>本文件为日潮有约微信小程序UI原型，展示主要页面和交互流程。</p>
+    <p>使用说明：点击屏幕上的可交互元素体验交互流程，部分交互点会有提示说明。</p>
+  </div>
+
+  <div class="device-wrapper">
+    <!-- 状态栏 -->
+    <div class="wx-statusbar"></div>
+
+    <!-- 页面内容区域 -->
+    <div id="app-container" class="page-container">
+      <!-- 内容将通过JavaScript动态加载 -->
+      <div id="loading" class="flex flex-col items-center justify-center h-full">
+        <div class="w-16 h-16 mb-4">
+          <svg class="animate-spin text-brand-blue w-full h-full" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </div>
+        <p class="text-gray-600">加载中...</p>
+      </div>
+    </div>
+
+    <!-- 手势提示 -->
+    <div id="gesture-hint" class="gesture-hint">下拉可刷新</div>
+
+    <!-- 弹出层 -->
+    <div id="popup" class="popup">
+      <div class="popup-content">
+        <!-- 弹出层内容将通过JavaScript动态加载 -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // UI原型交互逻辑
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('UI原型已加载');
+
+      // 模拟加载过程
+      setTimeout(() => {
+        document.getElementById('loading').style.display = 'none';
+        renderSplashScreen();
+      }, 1500);
+
+      // 渲染首页
+      function renderHomePage() {
+        const appContainer = document.getElementById('app-container');
+
+        // 首页HTML
+        appContainer.innerHTML = `
+          <!-- 顶部导航栏 -->
+          <div class="sticky top-0 z-20 bg-white shadow-sm">
+            <div class="flex items-center justify-between px-4 py-2">
+              <div class="text-lg font-medium">日潮有约</div>
+              <div class="flex items-center">
+              </div>
+            </div>
+
+            <!-- 位置选择器 -->
+            <div id="location-selector" class="flex items-center px-4 py-2 bg-gray-50">
+              <i class="fa-solid fa-location-dot text-brand-blue mr-2"></i>
+              <div class="text-base text-gray-800 font-medium mr-1">青岛市</div>
+              <i class="fa-solid fa-chevron-down text-xs text-gray-500"></i>
+            </div>
+
+            <!-- 日期选择器 -->
+            <div class="overflow-x-auto whitespace-nowrap px-4 py-2 border-b border-gray-100 date-scroll">
+              <div id="date-selector" class="inline-flex">
+                <div class="date-item active px-3 py-1 mx-1 rounded-full text-white bg-brand-blue flex flex-col items-center">
+                  <span class="text-xs">今天</span>
+                  <span class="text-sm font-medium">05/20</span>
+                </div>
+                <div class="date-item px-3 py-1 mx-1 rounded-full text-gray-700 flex flex-col items-center">
+                  <span class="text-xs">周二</span>
+                  <span class="text-sm font-medium">05/21</span>
+                </div>
+                <div class="date-item px-3 py-1 mx-1 rounded-full text-gray-700 flex flex-col items-center">
+                  <span class="text-xs">周三</span>
+                  <span class="text-sm font-medium">05/22</span>
+                </div>
+                <div class="date-item px-3 py-1 mx-1 rounded-full text-gray-700 flex flex-col items-center">
+                  <span class="text-xs">周四</span>
+                  <span class="text-sm font-medium">05/23</span>
+                </div>
+                <div class="date-item px-3 py-1 mx-1 rounded-full text-gray-700 flex flex-col items-center">
+                  <span class="text-xs">周五</span>
+                  <span class="text-sm font-medium">05/24</span>
+                </div>
+                <div class="date-item px-3 py-1 mx-1 rounded-full text-gray-700 flex flex-col items-center">
+                  <span class="text-xs">周六</span>
+                  <span class="text-sm font-medium">05/25</span>
+                </div>
+                <div class="date-item px-3 py-1 mx-1 rounded-full text-gray-700 flex flex-col items-center">
+                  <span class="text-xs">周日</span>
+                  <span class="text-sm font-medium">05/26</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 内容区域 -->
+          <div class="p-4 pb-20">
+            <!-- 日出日落卡片 -->
+            <div id="sun-card" class="mb-4 bg-white rounded-lg shadow overflow-hidden">
+              <div class="bg-sunrise-gradient text-white p-4">
+                <div class="flex justify-between items-center mb-2">
+                  <h3 class="font-medium">今日日出日落</h3>
+                  <button class="text-white text-sm">详情 <i class="fa-solid fa-chevron-right text-xs"></i></button>
+                </div>
+                <div class="flex justify-between text-sm">
+                  <div>
+                    <div class="text-xs opacity-90">日出</div>
+                    <div class="font-numeric text-lg font-medium">05:12</div>
+                  </div>
+                  <div>
+                    <div class="text-xs opacity-90">日落</div>
+                    <div class="font-numeric text-lg font-medium">19:05</div>
+                  </div>
+                  <div>
+                    <div class="text-xs opacity-90">昼长</div>
+                    <div class="font-numeric text-lg font-medium">13h 53m</div>
+                  </div>
+                </div>
+              </div>
+              <div class="p-4">
+                <div class="relative h-24 mb-2">
+                  <div class="w-full h-full bg-gray-100 rounded-full overflow-hidden relative">
+                    <div class="absolute top-0 left-0 w-full h-full">
+                      <svg width="100%" height="100%" viewBox="0 0 200 100">
+                        <path d="M0,100 Q100,0 200,100" fill="none" stroke="#FFD09F" stroke-width="2" />
+                        <circle cx="60" cy="70" r="5" fill="#FF9D4D" />
+                      </svg>
+                    </div>
+                  </div>
+
+                  <div class="absolute bottom-0 left-0 text-xs text-gray-600">05:12</div>
+                  <div class="absolute bottom-0 right-0 text-xs text-gray-600">19:05</div>
+                </div>
+                <div class="flex justify-between text-sm text-gray-700">
+                  <div>
+                    <div class="text-xs text-gray-500">黄金时刻(早)</div>
+                    <div class="font-numeric font-medium">05:42 - 06:20</div>
+                  </div>
+                  <div>
+                    <div class="text-xs text-gray-500">黄金时刻(晚)</div>
+                    <div class="font-numeric font-medium">18:23 - 19:01</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 潮汐卡片 -->
+            <div id="tide-card" class="mb-4 bg-white rounded-lg shadow overflow-hidden">
+              <div class="bg-ocean-gradient text-white p-4">
+                <div class="flex justify-between items-center mb-2">
+                  <h3 class="font-medium">今日潮汐</h3>
+                  <button class="text-white text-sm">详情 <i class="fa-solid fa-chevron-right text-xs"></i></button>
+                </div>
+                <div class="flex justify-between text-sm">
+                  <div>
+                    <div class="text-xs opacity-90">高潮</div>
+                    <div class="font-numeric text-lg font-medium">08:23</div>
+                    <div class="text-xs opacity-90">4.2m</div>
+                  </div>
+                  <div>
+                    <div class="text-xs opacity-90">低潮</div>
+                    <div class="font-numeric text-lg font-medium">14:52</div>
+                    <div class="text-xs opacity-90">0.8m</div>
+                  </div>
+                  <div>
+                    <div class="text-xs opacity-90">高潮</div>
+                    <div class="font-numeric text-lg font-medium">20:41</div>
+                    <div class="text-xs opacity-90">3.9m</div>
+                  </div>
+                </div>
+              </div>
+              <div class="p-4">
+                <div class="relative h-24 mb-2">
+                  <div class="w-full h-full bg-gray-50 rounded-lg overflow-hidden relative">
+                    <svg width="100%" height="100%" viewBox="0 0 300 100">
+                      <path d="M0,70 C25,30 50,80 75,50 C100,20 125,60 150,40 C175,20 200,60 225,50 C250,40 275,60 300,50" fill="none" stroke="#3A7AFE" stroke-width="2" />
+                    </svg>
+
+                    <div class="absolute top-1/2 left-1/4 w-2 h-2 bg-brand-blue rounded-full transform -translate-y-1/2"></div>
+                    <div class="absolute top-0 left-1/4 h-full border-l border-gray-300 border-dashed"></div>
+
+                    <div class="absolute top-1/2 left-2/4 w-2 h-2 bg-brand-blue rounded-full transform -translate-y-1/2"></div>
+                    <div class="absolute top-0 left-2/4 h-full border-l border-gray-300 border-dashed"></div>
+
+                    <div class="absolute top-1/2 left-3/4 w-2 h-2 bg-brand-blue rounded-full transform -translate-y-1/2"></div>
+                    <div class="absolute top-0 left-3/4 h-full border-l border-gray-300 border-dashed"></div>
+                  </div>
+
+                  <div class="absolute bottom-0 left-0 text-xs text-gray-600">00:00</div>
+                  <div class="absolute bottom-0 right-0 text-xs text-gray-600">23:59</div>
+                </div>
+                <div class="text-sm text-gray-700">
+                  <div class="text-xs text-gray-500 mb-1">当前状态</div>
+                  <div class="flex items-center">
+                    <i class="fa-solid fa-water mr-1 text-brand-blue"></i>
+                    <span>落潮中，预计14:52到达低潮位</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 天气卡片 -->
+            <div id="weather-card" class="mb-4 bg-white rounded-lg shadow overflow-hidden">
+              <div class="p-4">
+                <div class="flex justify-between items-center mb-4">
+                  <h3 class="font-medium">今日天气</h3>
+                  <button class="text-brand-blue text-sm">详情 <i class="fa-solid fa-chevron-right text-xs"></i></button>
+                </div>
+
+                <div class="flex items-center mb-4">
+                  <div class="text-5xl mr-4 text-gray-700 w-20 text-center">
+                    <i class="fa-solid fa-cloud-sun"></i>
+                  </div>
+                  <div>
+                    <div class="text-3xl font-medium font-numeric mb-1">24°C</div>
+                    <div class="text-sm text-gray-600">多云，18°C ~ 25°C</div>
+                    <div class="text-sm text-gray-600">东南风 3级，湿度 65%</div>
+                  </div>
+                </div>
+
+                <div class="flex overflow-x-auto pb-2">
+                  <div class="flex flex-col items-center mr-4 min-w-[50px]">
+                    <div class="text-xs text-gray-500">现在</div>
+                    <div class="my-1 text-lg text-gray-700">
+                      <i class="fa-solid fa-cloud-sun"></i>
+                    </div>
+                    <div class="text-sm font-medium font-numeric">24°</div>
+                  </div>
+                  <div class="flex flex-col items-center mr-4 min-w-[50px]">
+                    <div class="text-xs text-gray-500">11:00</div>
+                    <div class="my-1 text-lg text-gray-700">
+                      <i class="fa-solid fa-cloud"></i>
+                    </div>
+                    <div class="text-sm font-medium font-numeric">25°</div>
+                  </div>
+                  <div class="flex flex-col items-center mr-4 min-w-[50px]">
+                    <div class="text-xs text-gray-500">12:00</div>
+                    <div class="my-1 text-lg text-gray-700">
+                      <i class="fa-solid fa-cloud"></i>
+                    </div>
+                    <div class="text-sm font-medium font-numeric">25°</div>
+                  </div>
+                  <div class="flex flex-col items-center mr-4 min-w-[50px]">
+                    <div class="text-xs text-gray-500">13:00</div>
+                    <div class="my-1 text-lg text-gray-700">
+                      <i class="fa-solid fa-cloud"></i>
+                    </div>
+                    <div class="text-sm font-medium font-numeric">25°</div>
+                  </div>
+                  <div class="flex flex-col items-center mr-4 min-w-[50px]">
+                    <div class="text-xs text-gray-500">14:00</div>
+                    <div class="my-1 text-lg text-gray-700">
+                      <i class="fa-solid fa-cloud-sun"></i>
+                    </div>
+                    <div class="text-sm font-medium font-numeric">24°</div>
+                  </div>
+                  <div class="flex flex-col items-center mr-4 min-w-[50px]">
+                    <div class="text-xs text-gray-500">15:00</div>
+                    <div class="my-1 text-lg text-gray-700">
+                      <i class="fa-solid fa-cloud-sun"></i>
+                    </div>
+                    <div class="text-sm font-medium font-numeric">23°</div>
+                  </div>
+                  <div class="flex flex-col items-center mr-4 min-w-[50px]">
+                    <div class="text-xs text-gray-500">16:00</div>
+                    <div class="my-1 text-lg text-gray-700">
+                      <i class="fa-solid fa-sun"></i>
+                    </div>
+                    <div class="text-sm font-medium font-numeric">22°</div>
+                  </div>
+                  <div class="flex flex-col items-center mr-0 min-w-[50px]">
+                    <div class="text-xs text-gray-500">17:00</div>
+                    <div class="my-1 text-lg text-gray-700">
+                      <i class="fa-solid fa-sun"></i>
+                    </div>
+                    <div class="text-sm font-medium font-numeric">21°</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 广告Banner -->
+            <div class="mb-4 bg-white rounded-lg shadow overflow-hidden">
+              <div class="relative">
+                <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YmVhY2h8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=60" alt="广告" class="w-full h-32 object-cover">
+                <div class="absolute top-2 right-2 bg-black bg-opacity-50 text-white text-xs px-1 rounded">广告</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 底部导航栏 -->
+          <div class="tabbar">
+            <div class="tabbar-item active">
+              <i class="fa-solid fa-house tabbar-icon"></i>
+              <span>首页</span>
+            </div>
+            <div class="tabbar-item">
+              <i class="fa-solid fa-sun tabbar-icon"></i>
+              <span>日出日落</span>
+            </div>
+            <div class="tabbar-item">
+              <i class="fa-solid fa-water tabbar-icon"></i>
+              <span>潮汐</span>
+            </div>
+            <div class="tabbar-item">
+              <i class="fa-solid fa-user tabbar-icon"></i>
+              <span>我的</span>
+            </div>
+          </div>
+        `;
+
+        // 添加事件监听
+        setupEventListeners();
+      }
+
+      // 事件监听设置
+      function setupEventListeners() {
+        // 位置选择器点击事件
+        document.getElementById('location-selector').addEventListener('click', function() {
+          showLocationSelector();
+        });
+
+        // 日期项点击事件
+        const dateItems = document.querySelectorAll('.date-item');
+        dateItems.forEach(item => {
+          item.addEventListener('click', function() {
+            // 移除所有活动状态
+            dateItems.forEach(di => {
+              di.classList.remove('active', 'bg-brand-blue', 'text-white');
+              di.classList.add('text-gray-700');
+            });
+
+            // 添加活动状态到当前项
+            this.classList.add('active', 'bg-brand-blue', 'text-white');
+            this.classList.remove('text-gray-700');
+          });
+        });
+
+        // TabBar项点击事件
+        const tabbarItems = document.querySelectorAll('.tabbar-item');
+        tabbarItems.forEach((item, index) => {
+          item.addEventListener('click', function() {
+            // 移除所有活动状态
+            tabbarItems.forEach(ti => {
+              ti.classList.remove('active');
+            });
+
+            // 添加活动状态到当前项
+            this.classList.add('active');
+
+            // 根据点击的tab显示对应页面
+            if (index === 0) {
+              renderHomePage();
+            } else if (index === 1) {
+              renderSunPage();
+            } else if (index === 2) {
+              renderTidePage();
+            } else if (index === 3) {
+              renderProfilePage();
+            }
+          });
+        });
+
+        // 日出日落卡片点击事件
+        const sunCard = document.getElementById('sun-card');
+        if (sunCard) {
+          sunCard.addEventListener('click', function() {
+            renderSunPage();
+            // 更新底部导航栏状态
+            document.querySelectorAll('.tabbar-item').forEach((item, index) => {
+              item.classList.toggle('active', index === 1);
+            });
+          });
+        }
+
+        // 潮汐卡片点击事件
+        const tideCard = document.getElementById('tide-card');
+        if (tideCard) {
+          tideCard.addEventListener('click', function() {
+            renderTidePage();
+            // 更新底部导航栏状态
+            document.querySelectorAll('.tabbar-item').forEach((item, index) => {
+              item.classList.toggle('active', index === 2);
+            });
+          });
+        }
+
+        // 天气卡片点击事件
+        const weatherCard = document.getElementById('weather-card');
+        if (weatherCard) {
+          const weatherDetailBtn = weatherCard.querySelector('button');
+          if (weatherDetailBtn) {
+            weatherDetailBtn.addEventListener('click', function(e) {
+              e.stopPropagation();
+              renderWeatherPage();
+            });
+          }
+        }
+      }
+
+      // 显示位置选择器弹窗
+      function showLocationSelector() {
+        const popup = document.getElementById('popup');
+        const popupContent = popup.querySelector('.popup-content');
+
+        // 设置弹窗内容
+        popupContent.innerHTML = `
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-medium">选择位置</h3>
+            <button id="close-popup" class="p-1">
+              <i class="fa-solid fa-times text-gray-500"></i>
+            </button>
+          </div>
+
+          <div class="mb-4">
+            <div class="relative">
+              <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg pl-10" placeholder="搜索城市">
+              <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <div class="flex items-center mb-2">
+              <i class="fa-solid fa-location-crosshairs text-brand-blue mr-2"></i>
+              <span class="text-brand-blue">定位当前城市</span>
+            </div>
+          </div>
+
+          <div class="mb-2">
+            <h4 class="text-sm text-gray-500 mb-2">最近访问</h4>
+            <div class="divide-y">
+              <div class="py-3 flex justify-between items-center">
+                <div class="flex items-center">
+                  <i class="fa-solid fa-location-dot mr-2 text-gray-400"></i>
+                  <span>青岛市</span>
+                </div>
+                <i class="fa-solid fa-check text-brand-blue"></i>
+              </div>
+              <div class="py-3 flex justify-between items-center">
+                <div class="flex items-center">
+                  <i class="fa-solid fa-location-dot mr-2 text-gray-400"></i>
+                  <span>威海市</span>
+                </div>
+              </div>
+              <div class="py-3 flex justify-between items-center">
+                <div class="flex items-center">
+                  <i class="fa-solid fa-location-dot mr-2 text-gray-400"></i>
+                  <span>烟台市</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        // 显示弹窗
+        popup.classList.add('active');
+
+        // 关闭弹窗事件
+        document.getElementById('close-popup').addEventListener('click', function() {
+          popup.classList.remove('active');
+        });
+
+        // 点击位置项事件
+        const locationItems = popupContent.querySelectorAll('.py-3');
+        locationItems.forEach(item => {
+          item.addEventListener('click', function() {
+            popup.classList.remove('active');
+          });
+        });
+      }
+
+      // 渲染日出日落详情页
+      function renderSunPage() {
+        const appContainer = document.getElementById('app-container');
+
+        appContainer.innerHTML = `
+          <!-- 顶部导航栏 -->
+          <div class="sticky top-0 z-20 bg-white shadow-sm">
+            <div class="flex items-center justify-between px-4 py-2">
+              <div class="text-lg font-medium">日出日落</div>
+              <div class="flex items-center">
+              </div>
+            </div>
+
+            <!-- 位置选择器 -->
+            <div id="location-selector" class="flex items-center px-4 py-2 bg-gray-50">
+              <i class="fa-solid fa-location-dot text-brand-blue mr-2"></i>
+              <div class="text-base text-gray-800 font-medium mr-1">青岛市</div>
+              <i class="fa-solid fa-chevron-down text-xs text-gray-500"></i>
+            </div>
+
+            <!-- 日期选择器 -->
+            <div class="overflow-x-auto whitespace-nowrap px-4 py-2 border-b border-gray-100 date-scroll">
+              <div id="date-selector" class="inline-flex">
+                <div class="date-item active px-3 py-1 mx-1 rounded-full text-white bg-brand-blue flex flex-col items-center">
+                  <span class="text-xs">今天</span>
+                  <span class="text-sm font-medium">05/20</span>
+                </div>
+                <div class="date-item px-3 py-1 mx-1 rounded-full text-gray-700 flex flex-col items-center">
+                  <span class="text-xs">周二</span>
+                  <span class="text-sm font-medium">05/21</span>
+                </div>
+                <div class="date-item px-3 py-1 mx-1 rounded-full text-gray-700 flex flex-col items-center">
+                  <span class="text-xs">周三</span>
+                  <span class="text-sm font-medium">05/22</span>
+                </div>
+                <div class="date-item px-3 py-1 mx-1 rounded-full text-gray-700 flex flex-col items-center">
+                  <span class="text-xs">周四</span>
+                  <span class="text-sm font-medium">05/23</span>
+                </div>
+                <div class="date-item px-3 py-1 mx-1 rounded-full text-gray-700 flex flex-col items-center">
+                  <span class="text-xs">周五</span>
+                  <span class="text-sm font-medium">05/24</span>
+                </div>
+                <div class="date-item px-3 py-1 mx-1 rounded-full text-gray-700 flex flex-col items-center">
+                  <span class="text-xs">周六</span>
+                  <span class="text-sm font-medium">05/25</span>
+                </div>
+                <div class="date-item px-3 py-1 mx-1 rounded-full text-gray-700 flex flex-col items-center">
+                  <span class="text-xs">周日</span>
+                  <span class="text-sm font-medium">05/26</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 内容区域 -->
+          <div class="p-4 pb-20">
+            <!-- 日出日落主要信息卡片 -->
+            <div class="mb-4 bg-white rounded-lg shadow overflow-hidden">
+              <div class="bg-sunrise-gradient text-white p-4">
+                <div class="flex justify-between items-center mb-2">
+                  <h3 class="font-medium">今日日出日落</h3>
+                  <div class="text-xs opacity-80">2023年5月20日</div>
+                </div>
+                <div class="flex justify-between text-sm mb-4">
+                  <div>
+                    <div class="text-xs opacity-90">日出</div>
+                    <div class="font-numeric text-lg font-medium">05:12</div>
+                  </div>
+                  <div>
+                    <div class="text-xs opacity-90">日落</div>
+                    <div class="font-numeric text-lg font-medium">19:05</div>
+                  </div>
+                  <div>
+                    <div class="text-xs opacity-90">昼长</div>
+                    <div class="font-numeric text-lg font-medium">13h 53m</div>
+                  </div>
+                </div>
+
+                <div class="relative h-32 mt-2">
+                  <div class="w-full h-full overflow-hidden relative">
+                    <svg width="100%" height="100%" viewBox="0 0 300 100">
+                      <defs>
+                        <linearGradient id="skyGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stop-color="#FF9D4D" />
+                          <stop offset="50%" stop-color="#FFBA7C" />
+                          <stop offset="100%" stop-color="#FF9D4D" />
+                        </linearGradient>
+                      </defs>
+                      <path d="M0,100 Q150,0 300,100" fill="none" stroke="url(#skyGradient)" stroke-width="3" />
+                      <circle cx="75" cy="75" r="8" fill="#FFD09F" filter="drop-shadow(0 0 5px rgba(255,255,255,0.8))" />
+                    </svg>
+
+                    <div class="absolute bottom-1 left-0 right-0 flex justify-between px-2">
+                      <div class="text-xs font-numeric">05:12</div>
+                      <div class="text-xs font-numeric">19:05</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 详细时间信息卡片 -->
+            <div class="mb-4 bg-white rounded-lg shadow">
+              <div class="p-4">
+                <h3 class="font-medium mb-3">详细时间</h3>
+                <div class="divide-y">
+                  <div class="py-3 flex justify-between">
+                    <div class="text-gray-600">民用曙光</div>
+                    <div class="font-numeric font-medium">04:42</div>
+                  </div>
+                  <div class="py-3 flex justify-between">
+                    <div class="text-gray-600">日出</div>
+                    <div class="font-numeric font-medium">05:12</div>
+                  </div>
+                  <div class="py-3 flex justify-between">
+                    <div class="text-gray-600">正午</div>
+                    <div class="font-numeric font-medium">12:09</div>
+                  </div>
+                  <div class="py-3 flex justify-between">
+                    <div class="text-gray-600">日落</div>
+                    <div class="font-numeric font-medium">19:05</div>
+                  </div>
+                  <div class="py-3 flex justify-between">
+                    <div class="text-gray-600">民用薄暮</div>
+                    <div class="font-numeric font-medium">19:35</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 黄金时刻卡片 -->
+            <div class="mb-4 bg-white rounded-lg shadow">
+              <div class="p-4">
+                <h3 class="font-medium mb-3">黄金时刻</h3>
+                <div class="text-sm mb-1 text-gray-500">黄金时刻是摄影师最喜爱的柔和光线时段</div>
+                <div class="divide-y">
+                  <div class="py-3 flex justify-between">
+                    <div>
+                      <div class="text-gray-600">早晨黄金时刻</div>
+                      <div class="text-xs text-gray-500">日出前后的柔和光线</div>
+                    </div>
+                    <div class="font-numeric font-medium">05:42 - 06:20</div>
+                  </div>
+                  <div class="py-3 flex justify-between">
+                    <div>
+                      <div class="text-gray-600">傍晚黄金时刻</div>
+                      <div class="text-xs text-gray-500">日落前后的柔和光线</div>
+                    </div>
+                    <div class="font-numeric font-medium">18:23 - 19:01</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 蓝调时刻卡片 -->
+            <div class="mb-4 bg-white rounded-lg shadow">
+              <div class="p-4">
+                <h3 class="font-medium mb-3">蓝调时刻</h3>
+                <div class="text-sm mb-1 text-gray-500">蓝调时刻是日出前或日落后天空呈现深蓝色的短暂时期</div>
+                <div class="divide-y">
+                  <div class="py-3 flex justify-between">
+                    <div>
+                      <div class="text-gray-600">早晨蓝调时刻</div>
+                    </div>
+                    <div class="font-numeric font-medium">04:42 - 05:12</div>
+                  </div>
+                  <div class="py-3 flex justify-between">
+                    <div>
+                      <div class="text-gray-600">傍晚蓝调时刻</div>
+                    </div>
+                    <div class="font-numeric font-medium">19:05 - 19:35</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 月相信息卡片 -->
+            <div class="mb-4 bg-white rounded-lg shadow">
+              <div class="p-4">
+                <h3 class="font-medium mb-3">月相信息</h3>
+                <div class="flex items-center justify-between">
+                  <div class="text-center">
+                    <div class="w-16 h-16 mx-auto mb-2">
+                      <i class="fa-solid fa-moon text-4xl text-gray-700"></i>
+                    </div>
+                    <div class="text-sm">上弦月</div>
+                  </div>
+                  <div>
+                    <div class="mb-2">
+                      <div class="text-xs text-gray-500">月出时间</div>
+                      <div class="font-numeric font-medium">12:43</div>
+                    </div>
+                    <div>
+                      <div class="text-xs text-gray-500">月落时间</div>
+                      <div class="font-numeric font-medium">01:21</div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="mb-2">
+                      <div class="text-xs text-gray-500">月相</div>
+                      <div class="font-medium">51%</div>
+                    </div>
+                    <div>
+                      <div class="text-xs text-gray-500">月龄</div>
+                      <div class="font-numeric font-medium">7.3天</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 广告Banner -->
+            <div class="mb-4 bg-white rounded-lg shadow overflow-hidden">
+              <div class="relative">
+                <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTR8fHN1bnJpc2V8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=60" alt="广告" class="w-full h-32 object-cover">
+                <div class="absolute top-2 right-2 bg-black bg-opacity-50 text-white text-xs px-1 rounded">广告</div>
+                <div class="absolute bottom-2 right-2 bg-black bg-opacity-30 text-white text-xs px-2 py-1 rounded-full">
+                  <i class="fa-solid fa-thumbs-down mr-1"></i>
+                  <span>反馈</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 底部导航栏 -->
+          <div class="tabbar">
+            <div class="tabbar-item">
+              <i class="fa-solid fa-house tabbar-icon"></i>
+              <span>首页</span>
+            </div>
+            <div class="tabbar-item active">
+              <i class="fa-solid fa-sun tabbar-icon"></i>
+              <span>日出日落</span>
+            </div>
+            <div class="tabbar-item">
+              <i class="fa-solid fa-water tabbar-icon"></i>
+              <span>潮汐</span>
+            </div>
+            <div class="tabbar-item">
+              <i class="fa-solid fa-user tabbar-icon"></i>
+              <span>我的</span>
+            </div>
+          </div>
+        `;
+
+        // 添加事件监听
+        setupEventListeners();
+      }
+
+      // 渲染潮汐详情页
+      function renderTidePage() {
+        const appContainer = document.getElementById('app-container');
+
+        appContainer.innerHTML = `
+          <!-- 顶部导航栏 -->
+          <div class="sticky top-0 z-20 bg-white shadow-sm">
+            <div class="flex items-center justify-between px-4 py-2">
+              <div class="text-lg font-medium">潮汐</div>
+              <div class="flex items-center">
+              </div>
+            </div>
+
+            <!-- 位置选择器 -->
+            <div id="location-selector" class="flex items-center px-4 py-2 bg-gray-50">
+              <i class="fa-solid fa-location-dot text-brand-blue mr-2"></i>
+              <div class="text-base text-gray-800 font-medium mr-1">青岛市</div>
+              <i class="fa-solid fa-chevron-down text-xs text-gray-500"></i>
+            </div>
+
+            <!-- 日期选择器 -->
+            <div class="overflow-x-auto whitespace-nowrap px-4 py-2 border-b border-gray-100 date-scroll">
+              <div id="date-selector" class="inline-flex">
+                <div class="date-item active px-3 py-1 mx-1 rounded-full text-white bg-brand-blue flex flex-col items-center">
+                  <span class="text-xs">今天</span>
+                  <span class="text-sm font-medium">05/20</span>
+                </div>
+                <div class="date-item px-3 py-1 mx-1 rounded-full text-gray-700 flex flex-col items-center">
+                  <span class="text-xs">周二</span>
+                  <span class="text-sm font-medium">05/21</span>
+                </div>
+                <div class="date-item px-3 py-1 mx-1 rounded-full text-gray-700 flex flex-col items-center">
+                  <span class="text-xs">周三</span>
+                  <span class="text-sm font-medium">05/22</span>
+                </div>
+                <div class="date-item px-3 py-1 mx-1 rounded-full text-gray-700 flex flex-col items-center">
+                  <span class="text-xs">周四</span>
+                  <span class="text-sm font-medium">05/23</span>
+                </div>
+                <div class="date-item px-3 py-1 mx-1 rounded-full text-gray-700 flex flex-col items-center">
+                  <span class="text-xs">周五</span>
+                  <span class="text-sm font-medium">05/24</span>
+                </div>
+                <div class="date-item px-3 py-1 mx-1 rounded-full text-gray-700 flex flex-col items-center">
+                  <span class="text-xs">周六</span>
+                  <span class="text-sm font-medium">05/25</span>
+                </div>
+                <div class="date-item px-3 py-1 mx-1 rounded-full text-gray-700 flex flex-col items-center">
+                  <span class="text-xs">周日</span>
+                  <span class="text-sm font-medium">05/26</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 内容区域 -->
+          <div class="p-4 pb-20">
+            <!-- 潮汐主要信息卡片 -->
+            <div class="mb-4 bg-white rounded-lg shadow overflow-hidden">
+              <div class="bg-ocean-gradient text-white p-4">
+                <div class="flex justify-between items-center mb-2">
+                  <h3 class="font-medium">今日潮汐</h3>
+                  <div class="text-xs opacity-80">2023年5月20日</div>
+                </div>
+                <div class="flex justify-between text-sm">
+                  <div>
+                    <div class="text-xs opacity-90">高潮</div>
+                    <div class="font-numeric text-lg font-medium">08:23</div>
+                    <div class="text-xs opacity-90">4.2m</div>
+                  </div>
+                  <div>
+                    <div class="text-xs opacity-90">低潮</div>
+                    <div class="font-numeric text-lg font-medium">14:52</div>
+                    <div class="text-xs opacity-90">0.8m</div>
+                  </div>
+                  <div>
+                    <div class="text-xs opacity-90">高潮</div>
+                    <div class="font-numeric text-lg font-medium">20:41</div>
+                    <div class="text-xs opacity-90">3.9m</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="p-4">
+                <div class="text-sm text-gray-700 mb-4">
+                  <div class="text-xs text-gray-500 mb-1">当前状态</div>
+                  <div class="flex items-center">
+                    <i class="fa-solid fa-water mr-1 text-brand-blue"></i>
+                    <span>落潮中，预计14:52到达低潮位</span>
+                  </div>
+                </div>
+
+                <div class="relative h-40">
+                  <div class="w-full h-full bg-gray-50 rounded-lg overflow-hidden relative">
+                    <svg width="100%" height="100%" viewBox="0 0 300 100" preserveAspectRatio="none">
+                      <defs>
+                        <linearGradient id="tideGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" stop-color="#3A7AFE" stop-opacity="0.5" />
+                          <stop offset="100%" stop-color="#3A7AFE" stop-opacity="0.1" />
+                        </linearGradient>
+                      </defs>
+                      <path d="M0,70 C25,30 50,80 75,50 C100,20 125,60 150,40 C175,20 200,60 225,50 C250,40 275,60 300,50" fill="none" stroke="#3A7AFE" stroke-width="2" />
+                      <path d="M0,70 C25,30 50,80 75,50 C100,20 125,60 150,40 C175,20 200,60 225,50 C250,40 275,60 300,50 L300,100 L0,100 Z" fill="url(#tideGradient)" />
+                    </svg>
+
+                    <div class="absolute top-1/4 left-[16.6%] w-1 h-full bg-gray-300 opacity-50"></div>
+                    <div class="absolute top-3/4 left-[41.6%] w-1 h-full bg-gray-300 opacity-50"></div>
+                    <div class="absolute top-1/4 left-[66.6%] w-1 h-full bg-gray-300 opacity-50"></div>
+                    <div class="absolute top-3/4 left-[91.6%] w-1 h-full bg-gray-300 opacity-50"></div>
+
+                    <div class="absolute top-1/4 left-[16.6%] w-2 h-2 bg-brand-blue rounded-full transform -translate-x-1/2"></div>
+                    <div class="absolute top-3/4 left-[41.6%] w-2 h-2 bg-brand-blue rounded-full transform -translate-x-1/2"></div>
+                    <div class="absolute top-1/4 left-[66.6%] w-2 h-2 bg-brand-blue rounded-full transform -translate-x-1/2"></div>
+                    <div class="absolute top-3/4 left-[91.6%] w-2 h-2 bg-brand-blue rounded-full transform -translate-x-1/2"></div>
+
+                    <!-- 当前时间指示器 -->
+                    <div class="absolute top-0 left-[33%] bottom-0 border-l-2 border-red-500 z-10">
+                      <div class="bg-red-500 text-white text-xs rounded px-1 py-0.5 absolute -top-2 transform -translate-x-1/2">
+                        现在
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="flex justify-between mt-1 text-xs text-gray-600">
+                    <div>00:00</div>
+                    <div>06:00</div>
+                    <div>12:00</div>
+                    <div>18:00</div>
+                    <div>24:00</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 潮汐时间表卡片 -->
+            <div class="mb-4 bg-white rounded-lg shadow">
+              <div class="p-4">
+                <h3 class="font-medium mb-3">潮汐时间表</h3>
+                <div class="divide-y">
+                  <div class="py-3 flex items-center">
+                    <div class="w-16 h-16 mr-4 rounded-full bg-ocean-gradient flex items-center justify-center text-white">
+                      <div class="text-center">
+                        <i class="fa-solid fa-arrow-up mb-1"></i>
+                        <div class="text-xs">高潮</div>
+                      </div>
+                    </div>
+                    <div>
+                      <div class="font-numeric text-lg font-medium">08:23</div>
+                      <div class="flex items-center text-sm text-gray-600">
+                        <span>潮高：</span>
+                        <span class="font-numeric">4.2米</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="py-3 flex items-center">
+                    <div class="w-16 h-16 mr-4 rounded-full bg-gray-200 flex items-center justify-center text-gray-700">
+                      <div class="text-center">
+                        <i class="fa-solid fa-arrow-down mb-1"></i>
+                        <div class="text-xs">低潮</div>
+                      </div>
+                    </div>
+                    <div>
+                      <div class="font-numeric text-lg font-medium">14:52</div>
+                      <div class="flex items-center text-sm text-gray-600">
+                        <span>潮高：</span>
+                        <span class="font-numeric">0.8米</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="py-3 flex items-center">
+                    <div class="w-16 h-16 mr-4 rounded-full bg-ocean-gradient flex items-center justify-center text-white">
+                      <div class="text-center">
+                        <i class="fa-solid fa-arrow-up mb-1"></i>
+                        <div class="text-xs">高潮</div>
+                      </div>
+                    </div>
+                    <div>
+                      <div class="font-numeric text-lg font-medium">20:41</div>
+                      <div class="flex items-center text-sm text-gray-600">
+                        <span>潮高：</span>
+                        <span class="font-numeric">3.9米</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="py-3 flex items-center">
+                    <div class="w-16 h-16 mr-4 rounded-full bg-gray-200 flex items-center justify-center text-gray-700">
+                      <div class="text-center">
+                        <i class="fa-solid fa-arrow-down mb-1"></i>
+                        <div class="text-xs">低潮</div>
+                      </div>
+                    </div>
+                    <div>
+                      <div class="font-numeric text-lg font-medium">02:17</div>
+                      <div class="flex items-center text-sm text-gray-600">
+                        <span class="mr-1">潮高：</span>
+                        <span class="font-numeric">1.1米</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 适宜活动卡片 -->
+            <div class="mb-4 bg-white rounded-lg shadow">
+              <div class="p-4">
+                <h3 class="font-medium mb-3">适宜活动</h3>
+                <div class="grid grid-cols-2 gap-3">
+                  <div class="bg-gray-50 rounded-lg p-3 flex items-center">
+                    <div class="w-10 h-10 rounded-full bg-sky-blue flex items-center justify-center text-white mr-3">
+                      <i class="fa-solid fa-fish"></i>
+                    </div>
+                    <div>
+                      <div class="font-medium text-sm">海钓</div>
+                      <div class="text-xs text-gray-500">推荐时间：08:00-10:00</div>
+                    </div>
+                  </div>
+
+                  <div class="bg-gray-50 rounded-lg p-3 flex items-center">
+                    <div class="w-10 h-10 rounded-full bg-calm-green flex items-center justify-center text-white mr-3">
+                      <i class="fa-solid fa-camera"></i>
+                    </div>
+                    <div>
+                      <div class="font-medium text-sm">海景摄影</div>
+                      <div class="text-xs text-gray-500">推荐时间：18:00-20:00</div>
+                    </div>
+                  </div>
+
+                  <div class="bg-gray-50 rounded-lg p-3 flex items-center">
+                    <div class="w-10 h-10 rounded-full bg-sunrise-orange flex items-center justify-center text-white mr-3">
+                      <i class="fa-solid fa-person-swimming"></i>
+                    </div>
+                    <div>
+                      <div class="font-medium text-sm">游泳</div>
+                      <div class="text-xs text-gray-500">不适宜</div>
+                    </div>
+                  </div>
+
+                  <div class="bg-gray-50 rounded-lg p-3 flex items-center">
+                    <div class="w-10 h-10 rounded-full bg-deep-blue flex items-center justify-center text-white mr-3">
+                      <i class="fa-solid fa-sailboat"></i>
+                    </div>
+                    <div>
+                      <div class="font-medium text-sm">帆船</div>
+                      <div class="text-xs text-gray-500">推荐时间：10:00-12:00</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 广告Banner -->
+            <div class="mb-4 bg-white rounded-lg shadow overflow-hidden">
+              <div class="relative">
+                <img src="https://images.unsplash.com/photo-1522163182402-834f871fd851?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8d2F2ZXN8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=60" alt="广告" class="w-full h-32 object-cover">
+                <div class="absolute top-2 right-2 bg-black bg-opacity-50 text-white text-xs px-1 rounded">广告</div>
+                <div class="absolute bottom-2 right-2 bg-black bg-opacity-30 text-white text-xs px-2 py-1 rounded-full">
+                  <i class="fa-solid fa-thumbs-down mr-1"></i>
+                  <span>反馈</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 底部导航栏 -->
+          <div class="tabbar">
+            <div class="tabbar-item">
+              <i class="fa-solid fa-house tabbar-icon"></i>
+              <span>首页</span>
+            </div>
+            <div class="tabbar-item">
+              <i class="fa-solid fa-sun tabbar-icon"></i>
+              <span>日出日落</span>
+            </div>
+            <div class="tabbar-item active">
+              <i class="fa-solid fa-water tabbar-icon"></i>
+              <span>潮汐</span>
+            </div>
+            <div class="tabbar-item">
+              <i class="fa-solid fa-user tabbar-icon"></i>
+              <span>我的</span>
+            </div>
+          </div>
+        `;
+
+        // 添加事件监听
+        setupEventListeners();
+      }
+
+      // 渲染个人中心页面
+      function renderProfilePage() {
+        const appContainer = document.getElementById('app-container');
+
+        appContainer.innerHTML = `
+          <!-- 顶部导航栏 -->
+          <div class="sticky top-0 z-10 bg-white shadow-sm">
+            <div class="flex items-center justify-between px-4 py-2">
+              <div class="text-lg font-medium">我的</div>
+              <div class="flex items-center">
+              </div>
+            </div>
+          </div>
+
+          <!-- 内容区域 -->
+          <div class="pb-20">
+            <!-- 用户信息卡片 -->
+            <div class="bg-ocean-gradient text-white p-4">
+              <div class="flex items-center">
+                <div class="w-16 h-16 rounded-full bg-white mr-4 overflow-hidden">
+                  <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8YXZhdGFyfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60" alt="用户头像" class="w-full h-full object-cover">
+                </div>
+                <div>
+                  <div class="font-medium text-lg mb-1">微信用户</div>
+                  <div class="text-sm opacity-90">普通用户</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 功能列表 -->
+            <div class="bg-white mt-4">
+              <div class="px-4 py-3 border-b border-gray-100">
+                <h3 class="text-base font-medium text-gray-800">常用功能</h3>
+              </div>
+
+              <div class="divide-y divide-gray-100">
+
+
+                <div class="flex items-center justify-between px-4 py-3">
+                  <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-sunrise-orange mr-3">
+                      <i class="fa-solid fa-bell"></i>
+                    </div>
+                    <span>消息提醒</span>
+                  </div>
+                  <i class="fa-solid fa-chevron-right text-gray-400 text-xs"></i>
+                </div>
+
+
+              </div>
+            </div>
+
+            <!-- 设置列表 -->
+            <div class="bg-white mt-4">
+              <div class="px-4 py-3 border-b border-gray-100">
+                <h3 class="text-base font-medium text-gray-800">设置</h3>
+              </div>
+
+              <div class="divide-y divide-gray-100">
+                <div class="flex items-center justify-between px-4 py-3">
+                  <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 mr-3">
+                      <i class="fa-solid fa-map-location-dot"></i>
+                    </div>
+                    <span>默认位置</span>
+                  </div>
+                  <i class="fa-solid fa-chevron-right text-gray-400 text-xs"></i>
+                </div>
+
+                <div class="flex items-center justify-between px-4 py-3">
+                  <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 mr-3">
+                      <i class="fa-solid fa-moon"></i>
+                    </div>
+                    <span>深色模式</span>
+                  </div>
+                  <div class="relative inline-block w-10 mr-2 align-middle select-none">
+                    <input type="checkbox" id="toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-gray-300 appearance-none cursor-pointer"/>
+                    <label for="toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between px-4 py-3">
+                  <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 mr-3">
+                      <i class="fa-solid fa-bell-slash"></i>
+                    </div>
+                    <span>消息免打扰</span>
+                  </div>
+                  <div class="relative inline-block w-10 mr-2 align-middle select-none">
+                    <input type="checkbox" id="toggle2" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-gray-300 appearance-none cursor-pointer"/>
+                    <label for="toggle2" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between px-4 py-3">
+                  <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 mr-3">
+                      <i class="fa-solid fa-circle-info"></i>
+                    </div>
+                    <span>关于我们</span>
+                  </div>
+                  <i class="fa-solid fa-chevron-right text-gray-400 text-xs"></i>
+                </div>
+
+
+              </div>
+            </div>
+
+            <!-- 广告Banner -->
+            <div class="mt-4 bg-white overflow-hidden">
+              <div class="relative">
+                <img src="https://images.unsplash.com/photo-1505118380757-91f5f5632de0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8c2Vhc2lkZXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60" alt="广告" class="w-full h-24 object-cover">
+                <div class="absolute top-2 right-2 bg-black bg-opacity-50 text-white text-xs px-1 rounded">广告</div>
+                <div class="absolute bottom-2 right-2 bg-black bg-opacity-30 text-white text-xs px-2 py-1 rounded-full">
+                  <i class="fa-solid fa-thumbs-down mr-1"></i>
+                  <span>反馈</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 版本信息 -->
+            <div class="mt-6 text-center text-gray-500 text-xs">
+              <p>日潮有约 v1.0.0</p>
+            </div>
+          </div>
+
+          <!-- 底部导航栏 -->
+          <div class="tabbar">
+            <div class="tabbar-item">
+              <i class="fa-solid fa-house tabbar-icon"></i>
+              <span>首页</span>
+            </div>
+            <div class="tabbar-item">
+              <i class="fa-solid fa-sun tabbar-icon"></i>
+              <span>日出日落</span>
+            </div>
+            <div class="tabbar-item">
+              <i class="fa-solid fa-water tabbar-icon"></i>
+              <span>潮汐</span>
+            </div>
+            <div class="tabbar-item active">
+              <i class="fa-solid fa-user tabbar-icon"></i>
+              <span>我的</span>
+            </div>
+          </div>
+        `;
+
+        // 添加事件监听
+        setupEventListeners();
+      }
+
+      // 渲染天气详情页
+      function renderWeatherPage() {
+        const appContainer = document.getElementById('app-container');
+
+        appContainer.innerHTML = `
+          <!-- 顶部导航栏 -->
+          <div class="sticky top-0 z-10 bg-white shadow-sm">
+            <div class="flex items-center justify-between px-4 py-2">
+              <div class="flex items-center">
+                <button id="btn-back" class="p-1 mr-2">
+                  <i class="fa-solid fa-chevron-left text-gray-600"></i>
+                </button>
+                <div class="text-lg font-medium">天气详情</div>
+              </div>
+              <div class="flex items-center">
+                <button id="btn-share" class="p-2">
+                  <i class="fa-solid fa-share-nodes text-gray-600"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- 位置选择器 -->
+            <div id="location-selector" class="flex items-center px-4 py-2 bg-gray-50">
+              <i class="fa-solid fa-location-dot text-brand-blue mr-2"></i>
+              <div class="text-base text-gray-800 font-medium mr-1">青岛市</div>
+              <i class="fa-solid fa-chevron-down text-xs text-gray-500"></i>
+            </div>
+
+            <!-- 日期选择器 -->
+            <div class="overflow-x-auto whitespace-nowrap px-4 py-2 border-b border-gray-100 date-scroll">
+              <div id="date-selector" class="inline-flex">
+                <div class="date-item active px-3 py-1 mx-1 rounded-full text-white bg-brand-blue flex flex-col items-center">
+                  <span class="text-xs">今天</span>
+                  <span class="text-sm font-medium">05/20</span>
+                </div>
+                <div class="date-item px-3 py-1 mx-1 rounded-full text-gray-700 flex flex-col items-center">
+                  <span class="text-xs">周二</span>
+                  <span class="text-sm font-medium">05/21</span>
+                </div>
+                <div class="date-item px-3 py-1 mx-1 rounded-full text-gray-700 flex flex-col items-center">
+                  <span class="text-xs">周三</span>
+                  <span class="text-sm font-medium">05/22</span>
+                </div>
+                <div class="date-item px-3 py-1 mx-1 rounded-full text-gray-700 flex flex-col items-center">
+                  <span class="text-xs">周四</span>
+                  <span class="text-sm font-medium">05/23</span>
+                </div>
+                <div class="date-item px-3 py-1 mx-1 rounded-full text-gray-700 flex flex-col items-center">
+                  <span class="text-xs">周五</span>
+                  <span class="text-sm font-medium">05/24</span>
+                </div>
+                <div class="date-item px-3 py-1 mx-1 rounded-full text-gray-700 flex flex-col items-center">
+                  <span class="text-xs">周六</span>
+                  <span class="text-sm font-medium">05/25</span>
+                </div>
+                <div class="date-item px-3 py-1 mx-1 rounded-full text-gray-700 flex flex-col items-center">
+                  <span class="text-xs">周日</span>
+                  <span class="text-sm font-medium">05/26</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 内容区域 -->
+          <div class="p-4 pb-20">
+            <!-- 当前天气卡片 -->
+            <div class="mb-4 bg-white rounded-lg shadow overflow-hidden">
+              <div class="p-4">
+                <div class="flex justify-between items-start mb-2">
+                  <div class="text-sm text-gray-500">今天 · 05月20日</div>
+                  <div class="text-sm text-gray-500">更新于 10:30</div>
+                </div>
+
+                <div class="flex items-center mb-4">
+                  <div class="text-6xl mr-4 text-gray-700 w-24 text-center">
+                    <i class="fa-solid fa-cloud-sun"></i>
+                  </div>
+                  <div>
+                    <div class="text-4xl font-medium font-numeric mb-1">24°C</div>
+                    <div class="text-sm text-gray-600">多云，18°C ~ 25°C</div>
+                    <div class="text-sm text-gray-600">东南风 3级，湿度 65%</div>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3 text-center mb-3">
+                  <div class="bg-gray-50 py-2 rounded">
+                    <div class="text-xs text-gray-500 mb-1">体感温度</div>
+                    <div class="font-medium font-numeric">25°C</div>
+                  </div>
+                  <div class="bg-gray-50 py-2 rounded">
+                    <div class="text-xs text-gray-500 mb-1">气压</div>
+                    <div class="font-medium font-numeric">1013 hPa</div>
+                  </div>
+                  <div class="bg-gray-50 py-2 rounded">
+                    <div class="text-xs text-gray-500 mb-1">能见度</div>
+                    <div class="font-medium font-numeric">10 km</div>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3 text-center">
+                  <div class="bg-gray-50 py-2 rounded">
+                    <div class="text-xs text-gray-500 mb-1">湿度</div>
+                    <div class="font-medium font-numeric">65%</div>
+                  </div>
+                  <div class="bg-gray-50 py-2 rounded">
+                    <div class="text-xs text-gray-500 mb-1">降水概率</div>
+                    <div class="font-medium font-numeric">10%</div>
+                  </div>
+                  <div class="bg-gray-50 py-2 rounded">
+                    <div class="text-xs text-gray-500 mb-1">紫外线</div>
+                    <div class="font-medium">中等</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 24小时天气预报 -->
+            <div class="mb-4 bg-white rounded-lg shadow">
+              <div class="p-4">
+                <h3 class="font-medium mb-3">24小时预报</h3>
+
+                <div class="overflow-x-auto -mx-4 px-4">
+                  <div class="flex pb-2" style="width: 800px;">
+                    <div class="flex flex-col items-center mr-4 w-14">
+                      <div class="text-xs text-gray-500">现在</div>
+                      <div class="my-1 text-lg text-gray-700">
+                        <i class="fa-solid fa-cloud-sun"></i>
+                      </div>
+                      <div class="text-sm font-medium font-numeric">24°</div>
+                      <div class="text-xs text-gray-500 mt-1">东南风</div>
+                      <div class="text-xs text-gray-500">3级</div>
+                    </div>
+                    <div class="flex flex-col items-center mr-4 w-14">
+                      <div class="text-xs text-gray-500">11:00</div>
+                      <div class="my-1 text-lg text-gray-700">
+                        <i class="fa-solid fa-cloud"></i>
+                      </div>
+                      <div class="text-sm font-medium font-numeric">25°</div>
+                      <div class="text-xs text-gray-500 mt-1">东南风</div>
+                      <div class="text-xs text-gray-500">3级</div>
+                    </div>
+                    <div class="flex flex-col items-center mr-4 w-14">
+                      <div class="text-xs text-gray-500">12:00</div>
+                      <div class="my-1 text-lg text-gray-700">
+                        <i class="fa-solid fa-cloud"></i>
+                      </div>
+                      <div class="text-sm font-medium font-numeric">25°</div>
+                      <div class="text-xs text-gray-500 mt-1">东南风</div>
+                      <div class="text-xs text-gray-500">3级</div>
+                    </div>
+                    <div class="flex flex-col items-center mr-4 w-14">
+                      <div class="text-xs text-gray-500">13:00</div>
+                      <div class="my-1 text-lg text-gray-700">
+                        <i class="fa-solid fa-cloud"></i>
+                      </div>
+                      <div class="text-sm font-medium font-numeric">25°</div>
+                      <div class="text-xs text-gray-500 mt-1">东南风</div>
+                      <div class="text-xs text-gray-500">3级</div>
+                    </div>
+                    <div class="flex flex-col items-center mr-4 w-14">
+                      <div class="text-xs text-gray-500">14:00</div>
+                      <div class="my-1 text-lg text-gray-700">
+                        <i class="fa-solid fa-cloud-sun"></i>
+                      </div>
+                      <div class="text-sm font-medium font-numeric">24°</div>
+                      <div class="text-xs text-gray-500 mt-1">东南风</div>
+                      <div class="text-xs text-gray-500">2级</div>
+                    </div>
+                    <div class="flex flex-col items-center mr-4 w-14">
+                      <div class="text-xs text-gray-500">15:00</div>
+                      <div class="my-1 text-lg text-gray-700">
+                        <i class="fa-solid fa-cloud-sun"></i>
+                      </div>
+                      <div class="text-sm font-medium font-numeric">23°</div>
+                      <div class="text-xs text-gray-500 mt-1">东南风</div>
+                      <div class="text-xs text-gray-500">2级</div>
+                    </div>
+                    <div class="flex flex-col items-center mr-4 w-14">
+                      <div class="text-xs text-gray-500">16:00</div>
+                      <div class="my-1 text-lg text-gray-700">
+                        <i class="fa-solid fa-sun"></i>
+                      </div>
+                      <div class="text-sm font-medium font-numeric">22°</div>
+                      <div class="text-xs text-gray-500 mt-1">东风</div>
+                      <div class="text-xs text-gray-500">2级</div>
+                    </div>
+                    <div class="flex flex-col items-center mr-0 w-14">
+                      <div class="text-xs text-gray-500">17:00</div>
+                      <div class="my-1 text-lg text-gray-700">
+                        <i class="fa-solid fa-sun"></i>
+                      </div>
+                      <div class="text-sm font-medium font-numeric">21°</div>
+                      <div class="text-xs text-gray-500 mt-1">东风</div>
+                      <div class="text-xs text-gray-500">2级</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 7天天气预报 -->
+            <div class="mb-4 bg-white rounded-lg shadow">
+              <div class="p-4">
+                <h3 class="font-medium mb-3">7天预报</h3>
+
+                <div class="divide-y">
+                  <div class="py-3 flex items-center justify-between">
+                    <div class="flex items-center">
+                      <div class="w-14 text-center">
+                        <div class="text-xs text-gray-500">今天</div>
+                        <div class="text-xs text-gray-500">05/20</div>
+                      </div>
+                      <div class="mx-3 text-xl text-gray-700">
+                        <i class="fa-solid fa-cloud-sun"></i>
+                      </div>
+                      <div>
+                        <div class="text-sm">多云</div>
+                      </div>
+                    </div>
+                    <div class="flex items-center font-numeric">
+                      <span class="text-gray-500 mr-3">18°</span>
+                      <span class="font-medium">25°</span>
+                    </div>
+                  </div>
+
+                  <div class="py-3 flex items-center justify-between">
+                    <div class="flex items-center">
+                      <div class="w-14 text-center">
+                        <div class="text-xs text-gray-500">周二</div>
+                        <div class="text-xs text-gray-500">05/21</div>
+                      </div>
+                      <div class="mx-3 text-xl text-gray-700">
+                        <i class="fa-solid fa-cloud"></i>
+                      </div>
+                      <div>
+                        <div class="text-sm">阴</div>
+                      </div>
+                    </div>
+                    <div class="flex items-center font-numeric">
+                      <span class="text-gray-500 mr-3">17°</span>
+                      <span class="font-medium">24°</span>
+                    </div>
+                  </div>
+
+                  <div class="py-3 flex items-center justify-between">
+                    <div class="flex items-center">
+                      <div class="w-14 text-center">
+                        <div class="text-xs text-gray-500">周三</div>
+                        <div class="text-xs text-gray-500">05/22</div>
+                      </div>
+                      <div class="mx-3 text-xl text-gray-700">
+                        <i class="fa-solid fa-cloud-showers-heavy"></i>
+                      </div>
+                      <div>
+                        <div class="text-sm">小雨</div>
+                      </div>
+                    </div>
+                    <div class="flex items-center font-numeric">
+                      <span class="text-gray-500 mr-3">16°</span>
+                      <span class="font-medium">22°</span>
+                    </div>
+                  </div>
+
+                  <div class="py-3 flex items-center justify-between">
+                    <div class="flex items-center">
+                      <div class="w-14 text-center">
+                        <div class="text-xs text-gray-500">周四</div>
+                        <div class="text-xs text-gray-500">05/23</div>
+                      </div>
+                      <div class="mx-3 text-xl text-gray-700">
+                        <i class="fa-solid fa-cloud-sun-rain"></i>
+                      </div>
+                      <div>
+                        <div class="text-sm">小雨转多云</div>
+                      </div>
+                    </div>
+                    <div class="flex items-center font-numeric">
+                      <span class="text-gray-500 mr-3">17°</span>
+                      <span class="font-medium">23°</span>
+                    </div>
+                  </div>
+
+                  <div class="py-3 flex items-center justify-between">
+                    <div class="flex items-center">
+                      <div class="w-14 text-center">
+                        <div class="text-xs text-gray-500">周五</div>
+                        <div class="text-xs text-gray-500">05/24</div>
+                      </div>
+                      <div class="mx-3 text-xl text-gray-700">
+                        <i class="fa-solid fa-sun"></i>
+                      </div>
+                      <div>
+                        <div class="text-sm">晴</div>
+                      </div>
+                    </div>
+                    <div class="flex items-center font-numeric">
+                      <span class="text-gray-500 mr-3">18°</span>
+                      <span class="font-medium">26°</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 生活指数 -->
+            <div class="mb-4 bg-white rounded-lg shadow">
+              <div class="p-4">
+                <h3 class="font-medium mb-3">生活指数</h3>
+
+                <div class="grid grid-cols-3 gap-3">
+                  <div class="bg-gray-50 rounded-lg p-3 flex flex-col items-center">
+                    <i class="fa-solid fa-umbrella-beach text-xl text-sunrise-orange mb-2"></i>
+                    <div class="text-sm font-medium">海滩指数</div>
+                    <div class="text-xs text-gray-500 mt-1">适宜</div>
+                  </div>
+
+                  <div class="bg-gray-50 rounded-lg p-3 flex flex-col items-center">
+                    <i class="fa-solid fa-shirt text-xl text-brand-blue mb-2"></i>
+                    <div class="text-sm font-medium">穿衣指数</div>
+                    <div class="text-xs text-gray-500 mt-1">舒适</div>
+                  </div>
+
+                  <div class="bg-gray-50 rounded-lg p-3 flex flex-col items-center">
+                    <i class="fa-solid fa-sun text-xl text-warning mb-2"></i>
+                    <div class="text-sm font-medium">紫外线指数</div>
+                    <div class="text-xs text-gray-500 mt-1">中等</div>
+                  </div>
+
+                  <div class="bg-gray-50 rounded-lg p-3 flex flex-col items-center">
+                    <i class="fa-solid fa-person-running text-xl text-calm-green mb-2"></i>
+                    <div class="text-sm font-medium">运动指数</div>
+                    <div class="text-xs text-gray-500 mt-1">适宜</div>
+                  </div>
+
+                  <div class="bg-gray-50 rounded-lg p-3 flex flex-col items-center">
+                    <i class="fa-solid fa-car text-xl text-gray-700 mb-2"></i>
+                    <div class="text-sm font-medium">洗车指数</div>
+                    <div class="text-xs text-gray-500 mt-1">较适宜</div>
+                  </div>
+
+                  <div class="bg-gray-50 rounded-lg p-3 flex flex-col items-center">
+                    <i class="fa-solid fa-wind text-xl text-sky-blue mb-2"></i>
+                    <div class="text-sm font-medium">空气质量</div>
+                    <div class="text-xs text-gray-500 mt-1">优</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 广告Banner -->
+            <div class="mb-4 bg-white rounded-lg shadow overflow-hidden">
+              <div class="relative">
+                <img src="https://images.unsplash.com/photo-1530908295418-a12e326966ba?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fHdlYXRoZXJ8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=60" alt="广告" class="w-full h-32 object-cover">
+                <div class="absolute top-2 right-2 bg-black bg-opacity-50 text-white text-xs px-1 rounded">广告</div>
+                <div class="absolute bottom-2 right-2 bg-black bg-opacity-30 text-white text-xs px-2 py-1 rounded-full">
+                  <i class="fa-solid fa-thumbs-down mr-1"></i>
+                  <span>反馈</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 数据来源 -->
+            <div class="text-center text-gray-500 text-xs mb-6">
+              <p>数据来源：中国气象局</p>
+            </div>
+          </div>
+        `;
+
+        // 添加返回按钮事件
+        document.getElementById('btn-back').addEventListener('click', function() {
+          renderHomePage();
+        });
+
+        // 添加其他事件监听
+        setupEventListeners();
+      }
+
+      // 添加启动页面
+      function renderSplashScreen() {
+        const appContainer = document.getElementById('app-container');
+
+        appContainer.innerHTML = `
+          <div class="h-full w-full flex flex-col items-center justify-center bg-ocean-gradient">
+            <div class="text-white text-center p-6">
+              <div class="text-4xl font-bold mb-2">日潮有约</div>
+              <div class="text-lg opacity-90">您的海边活动好帮手</div>
+            </div>
+
+            <div class="w-24 h-24 rounded-full bg-white bg-opacity-20 flex items-center justify-center animate-pulse">
+              <i class="fa-solid fa-water text-5xl text-white"></i>
+            </div>
+
+            <div class="absolute bottom-12 text-white text-sm opacity-80">
+              <p>正在加载...</p>
+            </div>
+
+            <!-- 添加调试按钮 -->
+            <div class="absolute bottom-24 right-4">
+              <button id="debug-skip" class="px-3 py-1 bg-white bg-opacity-20 text-white text-xs rounded-full">
+                调试：跳到主页
+              </button>
+            </div>
+          </div>
+        `;
+
+        // 添加调试按钮事件
+        const skipBtn = document.getElementById('debug-skip');
+        if (skipBtn) {
+          skipBtn.addEventListener('click', function() {
+            console.log('调试：直接跳到主页');
+            renderHomePage();
+          });
+        }
+
+        console.log('启动页面已加载，2秒后进入引导页');
+
+        // 模拟加载过程，2秒后进入引导页
+        setTimeout(() => {
+          renderOnboardingScreen();
+        }, 2000);
+      }
+
+      // 添加引导页面
+      function renderOnboardingScreen() {
+        console.log('尝试渲染引导页...'); // <-- 添加日志确认函数被调用
+        const appContainer = document.getElementById('app-container');
+
+        appContainer.innerHTML = `
+          <div class="h-full w-full bg-white">
+            <div class="relative h-full">
+              <!-- 引导页滑动内容 -->
+              <div id="onboarding-slider" class="h-full">
+                <!-- 第一页 -->
+                <div class="h-full w-full flex flex-col">
+                  <div class="flex-1 flex flex-col items-center justify-center p-8">
+                    <div class="w-48 h-48 mb-8 rounded-full bg-sky-blue bg-opacity-10 flex items-center justify-center">
+                      <i class="fa-solid fa-sun text-6xl text-sunrise-orange"></i>
+                    </div>
+                    <h2 class="text-2xl font-medium text-gray-800 mb-3">随时掌握日出日落</h2>
+                    <p class="text-center text-gray-600">精确计算日出日落时间，黄金时刻提醒，为您的摄影、运动和户外活动提供指导</p>
+                  </div>
+
+                  <div class="p-8">
+                    <button id="next-onboarding-1" class="w-full py-3 bg-brand-blue text-white rounded-full font-medium">下一步</button>
+                  </div>
+                </div>
+
+                <!-- 第二页 -->
+                <div class="hidden h-full w-full flex flex-col">
+                  <div class="flex-1 flex flex-col items-center justify-center p-8">
+                    <div class="w-48 h-48 mb-8 rounded-full bg-ocean-gradient bg-opacity-10 flex items-center justify-center">
+                      <i class="fa-solid fa-water text-6xl text-brand-blue"></i>
+                    </div>
+                    <h2 class="text-2xl font-medium text-gray-800 mb-3">实时掌握潮汐变化</h2>
+                    <p class="text-center text-gray-600">准确预测潮汐时间和高度，为钓鱼、冲浪、海滩游玩提供专业参考</p>
+                  </div>
+
+                  <div class="p-8">
+                    <button id="next-onboarding-2" class="w-full py-3 bg-brand-blue text-white rounded-full font-medium">下一步</button>
+                  </div>
+                </div>
+
+                <!-- 第三页 -->
+                <div class="hidden h-full w-full flex flex-col">
+                  <div class="flex-1 flex flex-col items-center justify-center p-8">
+                    <div class="w-48 h-48 mb-8 rounded-full bg-calm-green bg-opacity-10 flex items-center justify-center">
+                      <i class="fa-solid fa-cloud-sun text-6xl text-calm-green"></i>
+                    </div>
+                    <h2 class="text-2xl font-medium text-gray-800 mb-3">精准天气预报</h2>
+                    <p class="text-center text-gray-600">提供精确天气数据，生活指数和活动建议，助您合理安排户外行程</p>
+                  </div>
+
+                  <div class="p-8">
+                    <button id="request-permission" class="w-full py-3 bg-brand-blue text-white rounded-full font-medium">立即体验</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 底部指示器 -->
+              <div class="absolute bottom-28 left-0 right-0 flex justify-center">
+                <div class="flex space-x-2">
+                  <div class="w-2 h-2 rounded-full bg-brand-blue"></div>
+                  <div class="w-2 h-2 rounded-full bg-gray-300"></div>
+                  <div class="w-2 h-2 rounded-full bg-gray-300"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        // 设置引导页按钮事件
+        document.getElementById('next-onboarding-1').addEventListener('click', function() {
+          const slider = document.getElementById('onboarding-slider');
+          const pages = slider.children;
+          const indicators = document.querySelectorAll('.bottom-28 .flex.space-x-2 .rounded-full');
+
+          // 隐藏第一页，显示第二页
+          pages[0].classList.add('hidden');
+          pages[1].classList.remove('hidden');
+
+          // 更新指示器
+          indicators[0].classList.remove('bg-brand-blue');
+          indicators[0].classList.add('bg-gray-300');
+          indicators[1].classList.remove('bg-gray-300');
+          indicators[1].classList.add('bg-brand-blue');
+        });
+
+        document.getElementById('next-onboarding-2').addEventListener('click', function() {
+          const slider = document.getElementById('onboarding-slider');
+          const pages = slider.children;
+          const indicators = document.querySelectorAll('.bottom-28 .flex.space-x-2 .rounded-full');
+
+          // 隐藏第二页，显示第三页
+          pages[1].classList.add('hidden');
+          pages[2].classList.remove('hidden');
+
+          // 更新指示器
+          indicators[1].classList.remove('bg-brand-blue');
+          indicators[1].classList.add('bg-gray-300');
+          indicators[2].classList.remove('bg-gray-300');
+          indicators[2].classList.add('bg-brand-blue');
+        });
+
+        document.getElementById('request-permission').addEventListener('click', function() {
+          console.log('用户点击立即体验，转到权限请求页面');
+          renderPermissionRequest();
+        });
+      }
+
+      // 渲染权限请求页面
+      function renderPermissionRequest() {
+        const appContainer = document.getElementById('app-container');
+
+        appContainer.innerHTML = `
+          <div class="h-full w-full bg-white flex flex-col">
+            <div class="flex-1 flex flex-col items-center justify-center p-8">
+              <div class="w-20 h-20 mb-6 rounded-full bg-gray-100 flex items-center justify-center">
+                <i class="fa-solid fa-location-dot text-4xl text-brand-blue"></i>
+              </div>
+
+              <h2 class="text-xl font-medium text-gray-800 mb-3">位置权限请求</h2>
+              <p class="text-center text-gray-600 mb-6">为了提供精确的日出日落和潮汐信息，我们需要获取您的位置信息</p>
+
+              <div class="w-full bg-gray-50 rounded-lg p-4 mb-8">
+                <div class="flex items-start">
+                  <i class="fa-solid fa-circle-info text-brand-blue mt-1 mr-3"></i>
+                  <div class="text-sm text-gray-600">
+                    <p class="mb-2">我们将仅在以下情况使用您的位置:</p>
+                    <ul class="list-disc pl-4 space-y-1">
+                      <li>为您提供当前位置的日出日落时间</li>
+                      <li>计算您所在位置的潮汐信息</li>
+                      <li>提供精准的当地天气预报</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="p-8">
+              <button id="allow-location" class="w-full py-3 mb-3 bg-brand-blue text-white rounded-full font-medium">允许获取位置</button>
+              <button id="deny-location" class="w-full py-3 border border-gray-300 text-gray-700 rounded-full font-medium">稍后再说</button>
+            </div>
+          </div>
+        `;
+
+        // 设置权限按钮事件
+        document.getElementById('allow-location').addEventListener('click', function() {
+          console.log('用户允许位置权限，转到首页');
+          renderHomePage();
+        });
+
+        document.getElementById('deny-location').addEventListener('click', function() {
+          console.log('用户拒绝位置权限，转到首页');
+          renderHomePage();
+        });
+      }
+
+      // 渲染错误状态页面
+      function renderErrorState() {
+        const appContainer = document.getElementById('app-container');
+
+        appContainer.innerHTML = `
+          <div class="h-full w-full bg-white flex flex-col items-center justify-center p-8">
+            <div class="w-24 h-24 mb-6 rounded-full bg-red-100 flex items-center justify-center">
+              <i class="fa-solid fa-exclamation-triangle text-4xl text-error"></i>
+            </div>
+
+            <h2 class="text-xl font-medium text-gray-800 mb-2">出错了</h2>
+            <p class="text-center text-gray-600 mb-8">抱歉，加载数据时出现错误，请检查您的网络连接后重试</p>
+
+            <button id="retry-loading" class="px-6 py-2 bg-brand-blue text-white rounded-full font-medium">重新加载</button>
+          </div>
+        `;
+
+        // 设置重试按钮事件
+        document.getElementById('retry-loading').addEventListener('click', function() {
+          // 显示加载状态
+          renderLoadingState();
+
+          // 模拟重新加载
+          setTimeout(() => {
+            renderHomePage();
+          }, 1500);
+        });
+      }
+
+      // 渲染空状态页面
+      function renderEmptyState() {
+        const appContainer = document.getElementById('app-container');
+
+        appContainer.innerHTML = `
+          <div class="h-full w-full bg-white flex flex-col items-center justify-center p-8">
+            <div class="w-24 h-24 mb-6 rounded-full bg-gray-100 flex items-center justify-center">
+              <i class="fa-solid fa-search text-4xl text-gray-400"></i>
+            </div>
+
+            <h2 class="text-xl font-medium text-gray-800 mb-2">暂无数据</h2>
+            <p class="text-center text-gray-600 mb-8">您所选择的地点或日期没有相关数据</p>
+
+            <button id="change-location" class="px-6 py-2 bg-brand-blue text-white rounded-full font-medium">更换位置</button>
+          </div>
+        `;
+
+        // 设置更换位置按钮事件
+        document.getElementById('change-location').addEventListener('click', function() {
+          showLocationSelector();
+        });
+      }
+
+      // 渲染加载状态页面
+      function renderLoadingState() {
+        const appContainer = document.getElementById('app-container');
+
+        appContainer.innerHTML = `
+          <div class="h-full w-full bg-white flex flex-col items-center justify-center p-8">
+            <div class="w-16 h-16 mb-6">
+              <svg class="animate-spin text-brand-blue w-full h-full" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </div>
+
+            <p class="text-gray-600">数据加载中...</p>
+          </div>
+        `;
+      }
+
+      // 显示插屏广告
+      function showInterstitialAd() {
+        const popup = document.getElementById('popup');
+        const popupContent = popup.querySelector('.popup-content');
+
+        // 设置弹窗内容 - 插屏广告
+        popupContent.innerHTML = `
+          <div class="flex justify-between items-center mb-4">
+            <div class="text-xs bg-black bg-opacity-50 text-white px-1 rounded">广告</div>
+            <button id="close-ad" class="p-1">
+              <i class="fa-solid fa-times text-gray-500"></i>
+            </button>
+          </div>
+
+          <div class="relative mb-3">
+            <img src="https://images.unsplash.com/photo-1520942702018-0862200e6873?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTV8fG9jZWFufGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60" alt="广告" class="w-full h-48 object-cover rounded-lg">
+          </div>
+
+          <div class="text-center mb-4">
+            <h3 class="font-bold text-lg mb-1">夏日海滩度假</h3>
+            <p class="text-gray-600 text-sm">畅享清凉夏日，预订即享8折优惠</p>
+          </div>
+
+          <div class="flex justify-between">
+            <button class="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-full">详情</button>
+            <button class="px-4 py-2 text-sm text-white bg-brand-blue rounded-full">立即预订</button>
+          </div>
+
+          <div class="absolute bottom-2 right-2 bg-black bg-opacity-30 text-white text-xs px-2 py-1 rounded-full">
+            <i class="fa-solid fa-thumbs-down mr-1"></i>
+            <span>反馈</span>
+          </div>
+        `;
+
+        // 显示弹窗
+        popup.classList.add('active');
+
+        // 关闭广告事件
+        document.getElementById('close-ad').addEventListener('click', function() {
+          popup.classList.remove('active');
+        });
+      }
+
+      // 初始化应用
+      document.addEventListener('DOMContentLoaded', function() {
+        console.log('UI原型已加载');
+
+        // 模拟加载过程，1秒后显示启动页
+        setTimeout(() => {
+          console.log('初始加载完成，显示启动页');
+          document.getElementById('loading').style.display = 'none';
+          renderSplashScreen();
+        }, 1000);
+
+        // 模拟弹出插屏广告的定时器
+        setTimeout(() => {
+          if (Math.random() > 0.5) { // 50%概率显示广告
+            showInterstitialAd();
+          }
+        }, 10000);
+      });
+    });
+  </script>
+</body>
+</html>
+
