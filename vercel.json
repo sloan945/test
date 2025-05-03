@@ -7,8 +7,6 @@
     { "src": "*.html", "use": "@vercel/static" }
   ],
   "routes": [
-    { "src": "/", "dest": "/UIPageShowcase.html" }
+    { "src": "/(.*)", "dest": "/UIPageShowcase.html" }
   ]
 }
-
-
