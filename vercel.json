@@ -1,0 +1,14 @@
+{
+  "name": "日潮有约-UI原型",
+  "version": 2,
+  "public": true,
+  "builds": [
+    { "src": "doc/design/UIprototype.html", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "/doc/design/UIprototype.html" }
+  ],
+  "github": {
+    "silent": true
+  }
+}
